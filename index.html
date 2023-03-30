@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>
+    
+
+
+body {
+    background-color: #009578;
+    color: white;
+    font-family: sans-serif;
+ 
+}
+
+.contain {
+    padding: 100px;
+    display: flex;
+    align-items: flex-start;
+    justify-content:space-between;
+    flex-wrap: wrap;
+   
+}
+
+.MainCard .div-task {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+}
+
+.add-task button {
+    cursor: pointer;
+    color: #e2725B;
+}
+
+</style>
+        <title>second project</title>
+    </head>
+    <body>
+        <div class="contain" id="main-container"></div>
+
+
+        <script>const TheRec = document.querySelector(".contain");
+            const TheData = [{ title: "not started",id: 1},{ title: "in progress", id: 2 },{title: "completed", id: 3 }];
+            
+            let tasks = JSON.parse(localStorage.getItem("tasks")) || {"not started": [],"in progress": [],"completed": [],
+            };
+            
+            for (const col of TheData) {
+                const TheMainCard = document.createElement("div");
+                TheMainCard.classList = "Main";
+                TheMainCard.setAttribute("id", `${col.title}`);
+                // TheMainCard.setAttribute("style", `--i:${col.color}`);
+                TheMainCard.innerHTML = `
+                    <p class="title">${col.title}</p>
+                    <div class="add-task">
+                        <input type="text" placeholder="New Task" id="${col.title}-task"/>
+                        <button  onclick="AddTask('${col.title}')">ADD+</button>
+                    </div>
+                `;
+                TheRec.appendChild(TheMainCard);
+            }
+            
+            
+            
+            function AddTask(columnId) {const taskName = document.getElementById(`${columnId}-task`).value;
+                if (taskName) {
+                    tasks[columnId].push(taskName);
+                    localStorage.setItem("tasks", JSON.stringify(tasks));
+                    createTask(taskName, columnId);
+                    document.getElementById(`${columnId}-task`).value = "";
+                }
+                window.location.reload();
+            }
+            
+            function createTask(taskName, columnId) {
+                const task = document.createElement("div");
+                task.classList.add("div-task");
+                task.setAttribute("draggable", true);
+                task.setAttribute("id", `${taskName}`);
+                task.innerHTML = `
+                    <input type="text" value="${taskName}" disabled>
+                `;
+                const divIcon = document.createElement("div");
+                divIcon.classList.add("icon");
+                divIcon.innerHTML = `
+                <ion-icon name="create-outline" class="edit" onclick="enableEdit('${taskName}')"></ion-icon>
+                <ion-icon name="close-circle-outline" class="delete" onclick="Delete
+                ('${taskName}')"></ion-icon>`;
+                task.appendChild(divIcon);
+                const listTask = document.getElementById(columnId);
+                listTask.insertBefore(task, listTask.children[1]);
+            }
+            
+            function enableEdit(taskName) {
+                const task = document.getElementById(taskName);
+                task.querySelector("input[type='text']").removeAttribute("disabled");
+                task.querySelector(".edit").setAttribute(
+                    "onclick",
+                    `Edit('${taskName}')`
+                );
+            }
+            
+            function Edit(taskName) {
+                const task = document.getElementById(taskName);
+                const newTaskName = task.querySelector("input[type='text']").value;
+                tasks[getTaskColumn(taskName)].push(newTaskName);
+                task.setAttribute("id", newTaskName);
+                task.querySelector("input[type='text']").setAttribute("disabled", true);
+                task.querySelector(".edit").setAttribute(
+                    "onclick",
+                    `enableEdit('${newTaskName}')`
+                );
+                tasks["not started"] = tasks["not started"].filter(
+                    (task) => task !== taskName
+                );
+                tasks["in progress"] = tasks["in progress"].filter(
+                    (task) => task !== taskName
+                );
+                tasks["completed"] = tasks["completed"].filter((task) => task !== taskName);
+                localStorage.setItem("tasks", JSON.stringify(tasks));
+                window.location.reload();
+            }
+            
+            function Delete(taskName) {
+                const task = document.getElementById(taskName);
+                tasks["not started"] = tasks["not started"].filter(
+                    (task) => task !== taskName
+                );
+                tasks["in progress"] = tasks["in progress"].filter(
+                    (task) => task !== taskName
+                );
+                tasks["completed"] = tasks["completed"].filter((task) => task !== taskName);
+                localStorage.setItem("tasks", JSON.stringify(tasks));
+                task.parentNode.removeChild(task);
+            }
+            
+                
+            const notStarted = document.getElementById("not started");
+            const inProgress = document.getElementById("in progress");
+            const completed = document.getElementById("completed");
+            
+            function Mob() {
+                tasks["not started"].forEach((taskName) =>
+                    createTask(taskName, "not started")
+                );
+                tasks["in progress"].forEach((taskName) =>
+                    createTask(taskName, "in progress")
+                );
+                tasks["completed"].forEach((taskName) => createTask(taskName, "completed"));
+            }
+            Mob();
+            const allCols = document.querySelectorAll(".Main");
+            // console.log(allCols);
+            let items = document.querySelectorAll(".div-task");
+            let drag = null;
+            items.forEach((column) => {
+                column.addEventListener("dragstart", () => {
+                    drag = column;
+                });
+            
+                
+            
+                allCols.forEach((col) => {
+                    col.addEventListener("dragover", function (e) {
+                        e.preventDefault();
+                    });
+                    
+                    col.addEventListener("drop", function (e) {
+                        e.preventDefault();
+                        this.insertBefore(drag, this.children[1]);
+                        this.style.background = " none";
+                        const taskColumn = getTaskColumn(drag.id);
+                        console.log(taskColumn + " " + col.id);
+                        tasks[taskColumn] = tasks[taskColumn].filter(
+                            (task) => task !== drag.id
+                        );
+                        tasks[col.id].push(drag.querySelector("input[type='text']").value);
+                        localStorage.setItem("tasks", JSON.stringify(tasks));
+                    });
+                });
+            });
+            </script>
+        
+        <script
+            type="module"
+            src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"
+        ></script>
+      
+    </body>
+</html>
